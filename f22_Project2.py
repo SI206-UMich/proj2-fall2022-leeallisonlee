@@ -25,7 +25,54 @@ def get_listings_from_search_results(html_file):
         ('Loft in Mission District', 210, '1944564'),  # example
     ]
     """
-    pass
+    base_path = os.path.abspath(os.path.dirname(__file__))
+    fullpath = os.path.join(base_path, html_file)
+    file = open(fullpath, 'r')
+    f = file.read()
+    file.close()
+    soup = BeautifulSoup(f, 'html.parser')
+
+ 
+    return_list = []
+
+    #from each div, get the div with the name and save the name to tuple, get the price and save the price to tuple, and get id and save id to tuple
+    #class of interest for the titles is div class_ t1jojoys dir dir-ltr(for the actual name)
+
+    
+    #name list
+    name_list = []
+    #get name div list
+    name_div = soup.find_all("div", class_ = "t1jojoys dir dir-ltr")
+    #get actual name element
+    for name in name_div:
+        name_list.append(name.text)
+    
+    #get the price
+    price_list = []
+    #get price div
+    price_div = soup.find_all("span", class_ = "_tyxjp1")
+    #get the actual price
+    for price in price_div:
+        price_list.append(int(price.text.strip('$')))
+
+    #get the id
+    id_list = []
+    for id in name_div:
+        id_list.append(id.get("id").strip("title_"))
+    
+    #make list of tuples
+    for index in range(len(name_list)):
+        return_list.append((name_list[index], price_list[index], id_list[index]))
+
+    return return_list
+        
+        
+
+
+
+
+
+
 
 
 def get_listing_information(listing_id):
@@ -58,7 +105,7 @@ def get_listing_information(listing_id):
 def get_detailed_listing_database(html_file):
     """
     Write a function that calls the above two functions in order to return
-    the complete listing information using the functions you’ve created.
+    the complete listing information using the functions youve created.
     This function takes in a variable representing the location of the search results html file.
     The return value should be in this format:
 
@@ -147,11 +194,12 @@ class TestCases(unittest.TestCase):
         # check that the variable you saved after calling the function is a list
         self.assertEqual(type(listings), list)
         # check that each item in the list is a tuple
-
+        self.assertEqual(type(listings[0]), tuple)
         # check that the first title, cost, and listing id tuple is correct (open the search results html and find it)
-
+        self.assertEqual(listings[0], ('Loft in Mission District', 210, '1944564'))
         # check that the last title is correct (open the search results html and find it)
-        pass
+        self.assertEqual(listings[19][0], "Guest suite in Mission District")
+
 
     def test_get_listing_information(self):
         html_list = ["1623609",
