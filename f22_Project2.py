@@ -163,7 +163,21 @@ def get_detailed_listing_database(html_file):
         ...
     ]
     """
-    pass
+    #get the list of listing id (list of tuples)
+    first_list = get_listings_from_search_results(html_file)
+    
+    return_list = []
+    #get each id and input to the second function and then attach t
+    for element in first_list:
+        input_list_id = element[2]
+        second_tuple = get_listing_information(input_list_id)
+        return_tuple = element + second_tuple
+        return_list.append(return_tuple)
+
+    return return_list
+    
+
+    
 
 
 def write_csv(data, filename):
@@ -286,13 +300,13 @@ class TestCases(unittest.TestCase):
             # assert each item in the list of listings is a tuple
             self.assertEqual(type(item), tuple)
             # check that each tuple has a length of 6
-
+            self.assertEqual(len(item), 6)
         # check that the first tuple is made up of the following:
         # 'Loft in Mission District', 210, '1944564', '2022-004088STR', 'Entire Room', 1
-
+        self.assertEqual(detailed_database[0], ('Loft in Mission District', 210, '1944564', '2022-004088STR', 'Entire Room', 1))
         # check that the last tuple is made up of the following:
         # 'Guest suite in Mission District', 238, '32871760', 'STR-0004707', 'Entire Room', 1
-
+        self.assertEqual(detailed_database[19], ('Guest suite in Mission District', 238, '32871760', 'STR-0004707', 'Entire Room', 1))
         pass
 
     def test_write_csv(self):
