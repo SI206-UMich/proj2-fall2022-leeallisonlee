@@ -114,7 +114,18 @@ def get_listing_information(listing_id):
     for div in policy_div:
         texts = div.find("span", class_ = "ll4r2nl dir dir-ltr")
         policy_list.append(texts.text)
-    policy_list = policy_list[0]
+    
+    policy_add = ""
+
+    pending_word = "pending"
+    pending_caps = "Pending"
+    exempt_word = "OSTR"
+    if pending_word in policy_list[0] or pending_caps in policy_list[0]:
+        policy_add = "Pending"
+    elif exempt_word in policy_list[0]:
+        policy_add = "Exempt"
+    else:
+        policy_add = policy_list[0]
 
     #get the place type 
     place_type = ""
@@ -143,8 +154,8 @@ def get_listing_information(listing_id):
             return_bedroom = int(bedroom_num[0])
 
     #make return tuple
-    return_tuple = (policy_list, place_type, return_bedroom)
-    
+    return_tuple = (policy_add, place_type, return_bedroom)
+
     return return_tuple
 
 
@@ -174,6 +185,7 @@ def get_detailed_listing_database(html_file):
         return_tuple = element + second_tuple
         return_list.append(return_tuple)
 
+    
     return return_list
     
 
@@ -202,7 +214,21 @@ def write_csv(data, filename):
 
     This function should not return anything.
     """
-    pass
+    writer_file = open(filename, 'w')
+    writer = csv.writer(writer_file)
+    # write headers
+    writer.writerow(["Listing Title", "Cost", "Listing ID", "Policy Number", "Place Type", "Number of Bedrooms"])
+
+    #sort the tuples
+    sorted_list = sorted(data, key = lambda t:t[1])
+
+    #write sorted to the file
+    for line in sorted_list:
+        writer.writerow(line)
+
+    #close file
+    writer_file.close()
+    
 
 
 def check_policy_numbers(data):
@@ -224,7 +250,27 @@ def check_policy_numbers(data):
     ]
 
     """
-    pass
+    regex1 = r'20[0-9][0-9]-00[0-9]{4}STR'
+    regex2 = r'STR-000[0-9]{4}'
+    
+    return_list = []
+    # at index of 3
+    for place in data:
+        policy_num = place[3]
+        
+        #check for pending and exempt
+
+        if policy_num == "Pending" or policy_num == "Exempt":
+            continue
+        else:
+            result1 = re.findall(regex1, policy_num)
+            result2 = re.findall(regex2, policy_num)
+            
+            #match or no?
+            if len(result1) == 0 and len(result2) == 0:
+                return_list.append(place[2])
+        
+    return return_list        
 
 
 def extra_credit(listing_id):
@@ -307,7 +353,7 @@ class TestCases(unittest.TestCase):
         # check that the last tuple is made up of the following:
         # 'Guest suite in Mission District', 238, '32871760', 'STR-0004707', 'Entire Room', 1
         self.assertEqual(detailed_database[19], ('Guest suite in Mission District', 238, '32871760', 'STR-0004707', 'Entire Room', 1))
-        pass
+        
 
     def test_write_csv(self):
         # call get_detailed_listing_database on "html_files/mission_district_search_results.html"
@@ -324,12 +370,12 @@ class TestCases(unittest.TestCase):
         # check that there are 21 lines in the csv
         self.assertEqual(len(csv_lines), 21)
         # check that the header row is correct
-
+        self.assertEqual(csv_lines[0], ["Listing Title", "Cost", "Listing ID", "Policy Number", "Place Type", "Number of Bedrooms"])
         # check that the next row is Private room in Mission District,82,51027324,Pending,Private Room,1
-
+        self.assertEqual(csv_lines[1], ["Private room in Mission District","82","51027324","Pending","Private Room","1"])
         # check that the last row is Apartment in Mission District,399,28668414,Pending,Entire Room,2
-
-        pass
+        self.assertEqual(csv_lines[20], ["Apartment in Mission District","399","28668414","Pending","Entire Room","2"])
+        
 
     def test_check_policy_numbers(self):
         # call get_detailed_listing_database on "html_files/mission_district_search_results.html"
@@ -340,11 +386,12 @@ class TestCases(unittest.TestCase):
         # check that the return value is a list
         self.assertEqual(type(invalid_listings), list)
         # check that there is exactly one element in the string
-
+        self.assertEqual(len(invalid_listings), 1)
         # check that the element in the list is a string
-
+        self.assertEqual(type(invalid_listings[0]), str)
         # check that the first element in the list is '16204265'
-        pass
+        self.assertEqual(invalid_listings[0], '16204265')
+        
 
 
 if __name__ == '__main__':
